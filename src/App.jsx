@@ -1,6 +1,20 @@
 import { useState } from 'react'
 import './App.css'
 
+function scoreLead(item) {
+  const [name, address, types] = Array.isArray(item) ? item : [item, null, null]
+  let score = 0
+  if (name) score += 3
+  if (address) score += 2
+  if (types) score += 1
+  score += (name?.length || 0) / 100
+  return score
+}
+
+function sortByScore(results) {
+  return [...results].sort((a, b) => scoreLead(b) - scoreLead(a))
+}
+
 const INDUSTRIES = [
   'media_entertainment',
   'sports_technology',
@@ -29,8 +43,16 @@ async function get_scrape(result_array, setResultArray) {
 
 function App() {
   const [result_array, setResultArray] = useState([])
+  const [hasScored, setHasScored] = useState(false)
+
+  function handleScoreResults() {
+    setResultArray(sortByScore(result_array))
+    setHasScored(true)
+  }
+
   return (
-    <div className="app">
+    <div className="app-layout">
+      <div className="app">
       <header className="hero">
         <div className="brand">Dakdan Worldwide</div>
         <div className="hero-badge">Lead Generation</div>
@@ -72,7 +94,7 @@ function App() {
           </div>
           <button
             className="submit-btn"
-            onClick={() => get_scrape(result_array, setResultArray)}
+            onClick={() => { setHasScored(false); get_scrape(result_array, setResultArray) }}
           >
             <span className="btn-text">Search leads</span>
             <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -126,6 +148,30 @@ function App() {
           </div>
         )}
       </section>
+      </div>
+
+      {result_array.length > 0 && (
+        <aside className="chatbot-panel">
+          <div className="chatbot-header">
+            <span className="chatbot-avatar">✦</span>
+            <span className="chatbot-title">Lead Assistant</span>
+          </div>
+          <div className="chatbot-messages">
+            <div className="chatbot-message bot">
+              {hasScored ? (
+                <p>Results are now sorted from best to worst. Top leads have more complete info (name, address, business type).</p>
+              ) : (
+                <>
+                  <p>I found {result_array.length} leads for you. I can score these from best to worst based on lead quality—completeness of info, address presence, and business type.</p>
+                  <button className="chatbot-score-btn" onClick={handleScoreResults}>
+                    Score results
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </aside>
+      )}
     </div>
   )
 }
