@@ -15,6 +15,8 @@ function sortByScore(results) {
   return [...results].sort((a, b) => scoreLead(b) - scoreLead(a))
 }
 
+const JAVA_API_BASE = 'https://leadsscraperbackend-production.up.railway.app'
+
 const INDUSTRIES = [
   'media_entertainment',
   'sports_technology',
@@ -26,24 +28,57 @@ const INDUSTRIES = [
 ]
 
 async function get_scrape(result_array, setResultArray) {
+  const business_name = document.getElementById('business_type').value
+  const location = document.getElementById('location').value
+  const payload = { business_name, location }
+
   const result = await fetch('https://webscraperpythonlogic-production.up.railway.app/scrape', {
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     method: 'POST',
-    body: JSON.stringify({
-      business_name: document.getElementById('business_type').value,
-      location: document.getElementById('location').value
-    })
+    body: JSON.stringify(payload)
   })
   const JSON_result = await result.json()
   const results_array = JSON_result.results || []
   setResultArray(results_array)
+
+  await saveRequest(JSON.stringify(payload))
+}
+
+async function saveRequest(request) {
+  try {
+    await fetch(`${JAVA_API_BASE}/saverequest`, {
+      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      body: JSON.stringify({ request })
+    })
+  } catch (err) {
+    console.warn('Failed to save request:', err)
+  }
+}
+
+async function getPreviousRequests() {
+  const res = await fetch(`${JAVA_API_BASE}/getpreviousrequests`)
+  const text = await res.text()
+  return text
 }
 
 function App() {
   const [result_array, setResultArray] = useState([])
   const [hasScored, setHasScored] = useState(false)
+  const [previousRequests, setPreviousRequests] = useState(null)
+  const [loadingPrevious, setLoadingPrevious] = useState(false)
+
+  async function handleGetPreviousRequests() {
+    setLoadingPrevious(true)
+    try {
+      const data = await getPreviousRequests()
+      setPreviousRequests(data)
+    } catch (err) {
+      setPreviousRequests(`Error: ${err.message}`)
+    } finally {
+      setLoadingPrevious(false)
+    }
+  }
 
   function handleScoreResults() {
     setResultArray(sortByScore(result_array))
@@ -101,6 +136,20 @@ function App() {
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </button>
+          <div className="previous-requests-section">
+            <button
+              className="previous-requests-btn"
+              onClick={handleGetPreviousRequests}
+              disabled={loadingPrevious}
+            >
+              {loadingPrevious ? 'Loading…' : 'Get previous requests'}
+            </button>
+            {previousRequests !== null && (
+              <div className="previous-requests-display">
+                <pre>{previousRequests}</pre>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
