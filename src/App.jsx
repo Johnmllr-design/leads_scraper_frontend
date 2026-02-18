@@ -12,7 +12,7 @@ const INDUSTRIES = [
 ]
 
 async function get_scrape(result_array, setResultArray) {
-  const result = await fetch('http://127.0.0.1:8000/scrape', {
+  const result = await fetch('https://webscraperpythonlogic-production.up.railway.app/scrape', {
     headers: {
       'Content-Type': 'application/json'
     },
