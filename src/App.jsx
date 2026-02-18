@@ -142,7 +142,7 @@ function App() {
               onClick={handleGetPreviousRequests}
               disabled={loadingPrevious}
             >
-              {loadingPrevious ? 'Loading…' : 'Get previous requests'}
+              {loadingPrevious ? 'Loading…' : 'See previous requests'}
             </button>
             {previousRequests !== null && (
               <div className="previous-requests-display">
