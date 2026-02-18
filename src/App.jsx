@@ -59,6 +59,14 @@ async function saveRequest(request) {
 async function getPreviousRequests() {
   const res = await fetch(`${JAVA_API_BASE}/getpreviousrequests`)
   const text = await res.text()
+  if (!res.ok) {
+    let msg = text
+    try {
+      const j = JSON.parse(text)
+      msg = `${j.error || 'Error'} (${j.status || res.status}) — ${j.path || '/getpreviousrequests'}`
+    } catch { /* use raw text */ }
+    throw new Error(msg)
+  }
   return text
 }
 
